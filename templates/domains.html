@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Домены - Observer{% endblock %}
+
+{% block content %}
+<!-- Заголовок страницы -->
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="text-primary">
+            <i class="fas fa-globe me-2"></i>Управление доменами
+        </h1>
+        <p class="text-muted">Добавляйте и управляйте доменами для мониторинга</p>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDomainModal">
+            <i class="fas fa-plus me-2"></i>Добавить домен
+        </button>
+    </div>
+</div>
+
+<!-- Список доменов -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-list me-2"></i>Список доменов
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if domains %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Домен</th>
+                                    <th>Название</th>
+                                    <th>Статус</th>
+                                    <th>Дата добавления</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for domain in domains %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ domain.name }}</strong>
+                                    </td>
+                                    <td>{{ domain.display_name }}</td>
+                                    <td>
+                                        {% if domain.is_active %}
+                                            <span class="badge bg-success">Активен</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Неактивен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if domain.created_at %}
+                                            {{ domain.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editDomain({{ domain.id }}, '{{ domain.name }}', '{{ domain.display_name }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleDomain({{ domain.id }}, {{ domain.is_active|lower }})">
+                                                {% if domain.is_active %}
+                                                    <i class="fas fa-pause"></i>
+                                                {% else %}
+                                                    <i class="fas fa-play"></i>
+                                                {% endif %}
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDomain({{ domain.id }}, '{{ domain.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-globe fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Доменов пока нет</h5>
+                        <p class="text-muted">Добавьте первый домен для начала мониторинга</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDomainModal">
+                            <i class="fas fa-plus me-2"></i>Добавить домен
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления домена -->
+<div class="modal fade" id="addDomainModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Добавить домен
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addDomainForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="domainName" class="form-label">Домен *</label>
+                        <input type="text" class="form-control" id="domainName" name="name" 
+                               placeholder="example.com" required>
+                        <div class="form-text">Введите домен без http://</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="displayName" class="form-label">Отображаемое название</label>
+                        <input type="text" class="form-control" id="displayName" name="display_name" 
+                               placeholder="Название компании">
+                        <div class="form-text">Если не указано, будет использован домен</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Добавить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования домена -->
+<div class="modal fade" id="editDomainModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Редактировать домен
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editDomainForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editDomainId" name="id">
+                    <div class="mb-3">
+                        <label for="editDomainName" class="form-label">Домен *</label>
+                        <input type="text" class="form-control" id="editDomainName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDisplayName" class="form-label">Отображаемое название</label>
+                        <input type="text" class="form-control" id="editDisplayName" name="display_name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteDomainModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Подтверждение удаления
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить домен <strong id="deleteDomainName"></strong>?</p>
+                <p class="text-muted">Это действие нельзя отменить. Все снимки и данные будут удалены.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteDomain()">
+                    <i class="fas fa-trash me-2"></i>Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentDeleteDomainId = null;
+
+// Функция редактирования домена
+function editDomain(id, name, displayName) {
+    document.getElementById('editDomainId').value = id;
+    document.getElementById('editDomainName').value = name;
+    document.getElementById('editDisplayName').value = displayName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editDomainModal'));
+    modal.show();
+}
+
+// Функция переключения статуса домена
+function toggleDomain(id, isActive) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    Observer.Utils.showLoading(button);
+    
+    // Здесь будет API вызов для переключения статуса
+    setTimeout(() => {
+        Observer.Utils.hideLoading(button, originalText);
+        Observer.Utils.showNotification('Статус домена изменён', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+    }, 1000);
+}
+
+// Функция удаления домена
+function deleteDomain(id, name) {
+    currentDeleteDomainId = id;
+    document.getElementById('deleteDomainName').textContent = name;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
+    modal.show();
+}
+
+// Функция подтверждения удаления
+function confirmDeleteDomain() {
+    if (!currentDeleteDomainId) return;
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    Observer.Utils.showLoading(button);
+    
+    // Здесь будет API вызов для удаления домена
+    setTimeout(() => {
+        Observer.Utils.hideLoading(button, originalText);
+        Observer.Utils.showNotification('Домен удалён', 'success');
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteDomainModal'));
+        modal.hide();
+        
+        setTimeout(() => window.location.reload(), 1000);
+    }, 1000);
+}
+
+// Обработка формы добавления домена
+document.getElementById('addDomainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const name = formData.get('name');
+    const displayName = formData.get('display_name') || name;
+    
+    try {
+        const result = await Observer.API.addDomain(name, displayName);
+        Observer.Utils.showNotification('Домен добавлен успешно!', 'success');
+        
+        // Закрыть модальное окно и перезагрузить страницу
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addDomainModal'));
+        modal.hide();
+        
+        setTimeout(() => window.location.reload(), 1000);
+        
+    } catch (error) {
+        Observer.Utils.showNotification('Ошибка добавления домена', 'danger');
+    }
+});
+
+// Обработка формы редактирования домена
+document.getElementById('editDomainForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const id = formData.get('id');
+    const name = formData.get('name');
+    const displayName = formData.get('display_name') || name;
+    
+    try {
+        // Здесь будет API вызов для редактирования домена
+        Observer.Utils.showNotification('Домен обновлён успешно!', 'success');
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editDomainModal'));
+        modal.hide();
+        
+        setTimeout(() => window.location.reload(), 1000);
+        
+    } catch (error) {
+        Observer.Utils.showNotification('Ошибка обновления домена', 'danger');
+    }
+});
+</script>
+{% endblock %} 
