@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -142,7 +142,7 @@ def get_domains():
         raise HTTPException(status_code=500, detail=f"Ошибка получения доменов: {str(e)}")
 
 @app.post("/api/domains")
-def add_domain(name: str, display_name: str = None):
+def add_domain(name: str = Form(...), display_name: str = Form(None)):
     """Добавить новый домен для мониторинга"""
     try:
         session = get_db_session()
@@ -160,9 +160,12 @@ def add_domain(name: str, display_name: str = None):
         )
         session.add(new_domain)
         session.commit()
+        
+        # Получаем ID нового домена
+        domain_id = new_domain.id
         session.close()
         
-        return {"message": f"Домен {name} добавлен", "domain_id": new_domain.id}
+        return {"message": f"Домен {name} добавлен", "domain_id": domain_id}
     except HTTPException:
         raise
     except Exception as e:

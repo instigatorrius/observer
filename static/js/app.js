@@ -77,7 +77,7 @@ const API = {
     // Получить список доменов
     async getDomains() {
         try {
-            const response = await fetch('/domains');
+            const response = await fetch('/api/domains');
             return await response.json();
         } catch (error) {
             console.error('Ошибка получения доменов:', error);
@@ -88,7 +88,7 @@ const API = {
     // Добавить домен
     async addDomain(name, displayName) {
         try {
-            const response = await fetch('/domains', {
+            const response = await fetch('/api/domains', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -105,7 +105,7 @@ const API = {
     // Получить снимки домена
     async getSnapshots(domainId) {
         try {
-            const response = await fetch(`/snapshots/${domainId}`);
+            const response = await fetch(`/api/snapshots/${domainId}`);
             return await response.json();
         } catch (error) {
             console.error('Ошибка получения снимков:', error);
