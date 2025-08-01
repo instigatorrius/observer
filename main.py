@@ -194,5 +194,63 @@ def get_snapshots(domain_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка получения снимков: {str(e)}")
 
+@app.delete("/api/domains/{domain_id}")
+def delete_domain(domain_id: int):
+    """Удалить домен"""
+    try:
+        session = get_db_session()
+        
+        # Находим домен
+        domain = session.query(Domain).filter(Domain.id == domain_id).first()
+        if not domain:
+            session.close()
+            raise HTTPException(status_code=404, detail="Домен не найден")
+        
+        # Проверяем, есть ли связанные снимки
+        snapshots_count = session.query(Snapshot).filter(Snapshot.domain_id == domain_id).count()
+        if snapshots_count > 0:
+            session.close()
+            raise HTTPException(status_code=400, detail=f"Нельзя удалить домен с {snapshots_count} снимками. Сначала удалите снимки.")
+        
+        # Удаляем домен
+        domain_name = domain.name
+        session.delete(domain)
+        session.commit()
+        session.close()
+        
+        return {"message": f"Домен {domain_name} удален"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка удаления домена: {str(e)}")
+
+@app.put("/api/domains/{domain_id}/toggle")
+def toggle_domain(domain_id: int):
+    """Переключить статус домена (активный/неактивный)"""
+    try:
+        session = get_db_session()
+        
+        # Находим домен
+        domain = session.query(Domain).filter(Domain.id == domain_id).first()
+        if not domain:
+            session.close()
+            raise HTTPException(status_code=404, detail="Домен не найден")
+        
+        # Переключаем статус
+        domain.is_active = not domain.is_active
+        session.commit()
+        
+        # Получаем обновленный статус
+        is_active = domain.is_active
+        domain_name = domain.name
+        session.close()
+        
+        status = "активирован" if is_active else "деактивирован"
+        return {"message": f"Домен {domain_name} {status}", "is_active": is_active}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка переключения статуса домена: {str(e)}")
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

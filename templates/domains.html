@@ -207,18 +207,20 @@ function editDomain(id, name, displayName) {
 }
 
 // Функция переключения статуса домена
-function toggleDomain(id, isActive) {
+async function toggleDomain(id, isActive) {
     const button = event.target;
     const originalText = button.innerHTML;
     
     Observer.Utils.showLoading(button);
     
-    // Здесь будет API вызов для переключения статуса
-    setTimeout(() => {
-        Observer.Utils.hideLoading(button, originalText);
-        Observer.Utils.showNotification('Статус домена изменён', 'success');
+    try {
+        const result = await Observer.API.toggleDomain(id);
+        Observer.Utils.showNotification(result.message, 'success');
         setTimeout(() => window.location.reload(), 1000);
-    }, 1000);
+    } catch (error) {
+        Observer.Utils.hideLoading(button, originalText);
+        Observer.Utils.showNotification('Ошибка: ' + (error.message || 'Неизвестная ошибка'), 'danger');
+    }
 }
 
 // Функция удаления домена
@@ -231,7 +233,7 @@ function deleteDomain(id, name) {
 }
 
 // Функция подтверждения удаления
-function confirmDeleteDomain() {
+async function confirmDeleteDomain() {
     if (!currentDeleteDomainId) return;
     
     const button = event.target;
@@ -239,16 +241,18 @@ function confirmDeleteDomain() {
     
     Observer.Utils.showLoading(button);
     
-    // Здесь будет API вызов для удаления домена
-    setTimeout(() => {
-        Observer.Utils.hideLoading(button, originalText);
-        Observer.Utils.showNotification('Домен удалён', 'success');
+    try {
+        const result = await Observer.API.deleteDomain(currentDeleteDomainId);
+        Observer.Utils.showNotification(result.message, 'success');
         
         const modal = bootstrap.Modal.getInstance(document.getElementById('deleteDomainModal'));
         modal.hide();
         
         setTimeout(() => window.location.reload(), 1000);
-    }, 1000);
+    } catch (error) {
+        Observer.Utils.hideLoading(button, originalText);
+        Observer.Utils.showNotification('Ошибка: ' + (error.message || 'Неизвестная ошибка'), 'danger');
+    }
 }
 
 // Обработка формы добавления домена

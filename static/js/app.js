@@ -122,6 +122,32 @@ const API = {
             console.error('Ошибка проверки статуса:', error);
             return { status: 'error' };
         }
+    },
+    
+    // Удалить домен
+    async deleteDomain(domainId) {
+        try {
+            const response = await fetch(`/api/domains/${domainId}`, {
+                method: 'DELETE'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка удаления домена:', error);
+            throw error;
+        }
+    },
+    
+    // Переключить статус домена
+    async toggleDomain(domainId) {
+        try {
+            const response = await fetch(`/api/domains/${domainId}/toggle`, {
+                method: 'PUT'
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка переключения статуса домена:', error);
+            throw error;
+        }
     }
 };
 
