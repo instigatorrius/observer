@@ -208,6 +208,13 @@ function editDomain(id, name, displayName) {
 
 // Функция переключения статуса домена
 async function toggleDomain(id, isActive) {
+    // Проверяем, что Observer API загружен
+    if (!window.Observer || !window.Observer.API || !window.Observer.API.toggleDomain) {
+        console.error('Observer API не загружен или функция toggleDomain недоступна');
+        alert('Ошибка: Observer API не загружен. Попробуйте обновить страницу.');
+        return;
+    }
+    
     const button = event.target;
     const originalText = button.innerHTML;
     
@@ -235,6 +242,13 @@ function deleteDomain(id, name) {
 // Функция подтверждения удаления
 async function confirmDeleteDomain() {
     if (!currentDeleteDomainId) return;
+    
+    // Проверяем, что Observer API загружен
+    if (!window.Observer || !window.Observer.API || !window.Observer.API.deleteDomain) {
+        console.error('Observer API не загружен или функция deleteDomain недоступна');
+        alert('Ошибка: Observer API не загружен. Попробуйте обновить страницу.');
+        return;
+    }
     
     const button = event.target;
     const originalText = button.innerHTML;

@@ -211,4 +211,8 @@ const Utils = {
 window.Observer = {
     API,
     Utils
-}; 
+};
+
+// Отладочная информация
+console.log('Observer API загружен:', window.Observer);
+console.log('Доступные методы API:', Object.keys(window.Observer.API)); 
